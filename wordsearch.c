@@ -1,12 +1,23 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
+
+typedef struct {
+    int* arr;
+    int size;
+} IntArray;
 
 // Declarations of the two functions you will implement
 // Feel free to declare any helper functions or global variables
 void printPuzzle(char** arr);
 void searchPuzzle(char** arr, char* word);
 int bSize;
+char asUpper(char c);
+char* toUpper(char* str);
+int flatIndex(int row, int col);
+char getChar(char** arr, int flatIndex);
+IntArray searchAdjacent(char** arr, int flatIndex, char c);
 
 // Main function, DO NOT MODIFY 	
 int main(int argc, char **argv) {
@@ -60,7 +71,77 @@ void printPuzzle(char** arr) {
     // in the instructions.
     // Your implementation here...
 
+    for (int i = 0; i < bSize; i++) {
+        for (int j = 0; j < bSize; j++) {
+            printf("%c ", *(*(arr + i) + j));
+        }
+        printf("\n");
+    }
+    printf("\n");
 }
+
+/**
+ * @brief convert a char to upper case if it is a lower case letter
+ * 
+ * @param c 
+ * @return char 
+ */
+char asUpper(char c) {
+    if (c >= 'a' && c <= 'z') {
+        return c - 32;
+    }
+    return c;
+}
+
+/**
+ * @brief convert a string to upper case
+ * 
+ * @param str 
+ * @return char* 
+ */
+char* toUpper(char* str) {
+    char* upper = (char*)malloc(strlen(str) * sizeof(char));
+    for (int i = 0; i < strlen(str); i++) {
+        *(upper + i) = asUpper(*(str + i));
+    }
+    return upper;
+}
+
+/**
+ * @brief calculate the flat index of the 2D array of size bSize, given row and col
+ * 
+ * @param row 
+ * @param col 
+ * @return int 
+ */
+int flatIndex(int row, int col) {
+    return row * bSize + col;
+}
+/**
+ * @brief get the char at the flat index of the 2D array
+ * 
+ * @param arr 
+ * @param flatIndex 
+ * @return char 
+ */
+char getChar(char** arr, int flatIndex) {
+    int row = flatIndex / bSize;
+    int col = flatIndex % bSize;
+    return *(*(arr + row) + col);
+}
+/**
+ * @brief check the squares adjacent to the the square at flatIndex for char c,
+ *       list of flat indices of adjacent squares that contain c
+ * 
+ * @param arr 
+ * @param flatIndex 
+ * @param c 
+ * @return IntArray  
+ */
+IntArray searchAdjacent(char** arr, int flatIndex, char c) {
+
+}
+
 
 void searchPuzzle(char** arr, char* word) {
     // This function checks if arr contains the search word. If the 
@@ -68,5 +149,10 @@ void searchPuzzle(char** arr, char* word) {
     // as shown in the sample runs. If not found, it will print a 
     // different message as shown in the sample runs.
     // Your implementation here...
+
+    // first convert word to upper case for comparison
+    char* upper = toUpper(word);
+
+
 
 }
