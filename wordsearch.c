@@ -139,7 +139,7 @@ char getChar(char** arr, int flatIndex) {
  * @return IntArray  
  */
 IntArray searchAdjacent(char** arr, int flatIndex, char c) {
-
+    // TODO: 
 }
 
 
@@ -153,6 +153,15 @@ void searchPuzzle(char** arr, char* word) {
     // first convert word to upper case for comparison
     char* upper = toUpper(word);
 
+    // then search for the first letter of the word in the puzzle
 
+    // for each occurence of the first letter, check if the word is in the puzzle at that point by recursively checking adjacent squares for the next letter
+
+    // for each occurence of the first letter where the word is in the puzzle, call a function to create the path of the solution (maybe a linked list?)
+
+    // for extra credit, find every path, not just the first one
+    // issue: it's not clear how we output the paths if they overlap beyond the first letter.
+
+    // print out the paths of valid solutions (probably with a 2 or 3d array?)
 
 }
