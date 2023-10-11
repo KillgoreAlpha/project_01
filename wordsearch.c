@@ -1,3 +1,4 @@
+//Collaboration between Anthony Rubick and Jeffrey Winters
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
