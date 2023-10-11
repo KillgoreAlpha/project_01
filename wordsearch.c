@@ -107,10 +107,11 @@ char asUpper(char c) {
  * @return char* 
  */
 char* toUpper(char* str) {
-    char* upper = (char*)malloc(strlen(str) * sizeof(char));
+    char* upper = (char*)malloc(strlen(str)+1 * sizeof(char));
     for (int i = 0; i < strlen(str); i++) {
         *(upper + i) = asUpper(*(str + i));
     }
+    *(upper + strlen(str)) = '\0';
     return upper;
 }
 
@@ -293,11 +294,13 @@ bool isWordAtIndex(char** puzzle, char* word, int flatIndex) {
 IntArray getPath(char** puzzle, char* word, int flatIndex) {
     // if the word is only one letter long, return the flatIndex
     if (strlen(word) == 1) {
-        return (IntArray) {
+        IntArray path = {
             .arr = (int*)malloc(sizeof(int)),
             .size = 1,
             .capacity = 1
         };
+        *(path.arr) = flatIndex;
+        return path;
     }
     // otherwise, check the adjacent squares for the next letter of the word
     IntArray adj = searchAdjacent(puzzle, flatIndex, *(word + 1));
@@ -366,6 +369,7 @@ void searchPuzzle(char** puzzle, char* word) {
                 *(starts.arr + starts.size) = i;
                 starts.size++;
             }
+            if (starts.size >= countFirstLetter) {break;}
         }
     }
 
