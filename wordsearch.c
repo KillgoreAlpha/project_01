@@ -10,17 +10,17 @@ typedef struct IntArray {
 
 // Declarations of the two functions you will implement
 // Feel free to declare any helper functions or global variables
-void printPuzzle(char** arr);
-void searchPuzzle(char** arr, char* word);
+void printPuzzle(char** puzzle);
+void searchPuzzle(char** puzzle, char* word);
 int bSize;
 char asUpper(char c);
 char* toUpper(char* str);
 int calcFlatIndex(int rowIndex, int colIndex);
 int calcRow(int flatIndex);
 int calcCol(int flatIndex);
-char getCharFlat(char** arr, int flatIndex);
-char getChar(char** arr, int row, int col);
-IntArray searchAdjacent(char** arr, int flatIndex, char c);
+char getCharFlat(char** puzzle, int flatIndex);
+char getChar(char** puzzle, int row, int col);
+IntArray searchAdjacent(char** puzzle, int flatIndex, char c);
 
 // Main function, DO NOT MODIFY 	
 int main(int argc, char **argv) {
@@ -68,7 +68,7 @@ int main(int argc, char **argv) {
     return 0;
 }
 
-void printPuzzle(char** arr) {
+void printPuzzle(char** puzzle) {
 	// This function will print out the complete puzzle grid (arr). 
     // It must produce the output in the SAME format as the samples 
     // in the instructions.
@@ -76,7 +76,7 @@ void printPuzzle(char** arr) {
 
     for (int i = 0; i < bSize; i++) {
         for (int j = 0; j < bSize; j++) {
-            printf("%c ", *(*(arr + i) + j));
+            printf("%c ", *(*(puzzle + i) + j));
         }
         printf("\n");
     }
@@ -144,34 +144,34 @@ int calcCol(int flatIndex) {
 /**
  * @brief get the char at the flat index of the 2D array
  * 
- * @param arr 
+ * @param puzzle 
  * @param flatIndex 
  * @return char 
  */
-char getCharFlat(char** arr, int flatIndex) {
-    return getChar(arr, calcRow(flatIndex), calcCol(flatIndex));
+char getCharFlat(char** puzzle, int flatIndex) {
+    return getChar(puzzle, calcRow(flatIndex), calcCol(flatIndex));
 }
 /**
  * @brief Get the char at the given row and col of the 2D array
  * 
- * @param arr 
+ * @param puzzle 
  * @param row 
  * @param col 
  * @return char 
  */
-char getChar(char** arr, int row, int col) {
-    return *(*(arr + row) + col);
+char getChar(char** puzzle, int row, int col) {
+    return *(*(puzzle + row) + col);
 }
 /**
  * @brief check the squares adjacent to the the square at flatIndex for char c,
  *       list of flat indices of adjacent squares that contain c
  * 
- * @param arr 
+ * @param puzzle 
  * @param flatIndex 
  * @param c 
  * @return IntArray  
  */
-IntArray searchAdjacent(char** arr, int flatIndex, char c) {
+IntArray searchAdjacent(char** puzzle, int flatIndex, char c) {
     // strategy regarding this IntArray, start with it being size 8, because that's the upper bound
     // track how many elements we actually use, and then resize it to that size at the end before returning it   
     int row = calcRow(flatIndex), col = calcCol(flatIndex);
@@ -191,42 +191,42 @@ IntArray searchAdjacent(char** arr, int flatIndex, char c) {
     // if the adjacent square is out of bounds, skip it
 
     // top left
-    if (row - 1 >= 0 && col - 1 >= 0 && getChar(arr, row - 1, col - 1) == c) {
+    if (row - 1 >= 0 && col - 1 >= 0 && getChar(puzzle, row - 1, col - 1) == c) {
         *(adj.arr + adj.size) = calcFlatIndex(row - 1, col - 1);
         adj.size++;
     }
     // top
-    if (row - 1 >= 0 && getChar(arr, row - 1, col) == c) {
+    if (row - 1 >= 0 && getChar(puzzle, row - 1, col) == c) {
         *(adj.arr + adj.size) = calcFlatIndex(row - 1, col);
         adj.size++;
     }
     // top right
-    if (row - 1 >= 0 && col + 1 < bSize && getChar(arr, row - 1, col + 1) == c) {
+    if (row - 1 >= 0 && col + 1 < bSize && getChar(puzzle, row - 1, col + 1) == c) {
         *(adj.arr + adj.size) = calcFlatIndex(row - 1, col + 1);
         adj.size++;
     }
     // left
-    if (col - 1 >= 0 && getChar(arr, row, col - 1) == c) {
+    if (col - 1 >= 0 && getChar(puzzle, row, col - 1) == c) {
         *(adj.arr + adj.size) = calcFlatIndex(row, col - 1);
         adj.size++;
     }
     // right
-    if (col + 1 < bSize && getChar(arr, row, col + 1) == c) {
+    if (col + 1 < bSize && getChar(puzzle, row, col + 1) == c) {
         *(adj.arr + adj.size) = calcFlatIndex(row, col + 1);
         adj.size++;
     }
     // bottom left
-    if (row + 1 < bSize && col - 1 >= 0 && getChar(arr, row + 1, col - 1) == c) {
+    if (row + 1 < bSize && col - 1 >= 0 && getChar(puzzle, row + 1, col - 1) == c) {
         *(adj.arr + adj.size) = calcFlatIndex(row + 1, col - 1);
         adj.size++;
     }
     // bottom
-    if (row + 1 < bSize && getChar(arr, row + 1, col) == c) {
+    if (row + 1 < bSize && getChar(puzzle, row + 1, col) == c) {
         *(adj.arr + adj.size) = calcFlatIndex(row + 1, col);
         adj.size++;
     }
     // bottom right
-    if (row + 1 < bSize && col + 1 < bSize && getChar(arr, row + 1, col + 1) == c) {
+    if (row + 1 < bSize && col + 1 < bSize && getChar(puzzle, row + 1, col + 1) == c) {
         *(adj.arr + adj.size) = calcFlatIndex(row + 1, col + 1);
         adj.size++;
     }
@@ -240,8 +240,9 @@ IntArray searchAdjacent(char** arr, int flatIndex, char c) {
     return adj;
 }
 
+bool isWordAtIndex(char** puzzle) {};
 
-void searchPuzzle(char** arr, char* word) {
+void searchPuzzle(char** puzzle, char* word) {
     // This function checks if arr contains the search word. If the 
     // word appears in arr, it will print out a message and the path 
     // as shown in the sample runs. If not found, it will print a 
