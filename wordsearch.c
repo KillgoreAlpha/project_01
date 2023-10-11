@@ -375,7 +375,7 @@ void searchPuzzle(char** puzzle, char* word) {
 
     // if there are no valid paths, print a message and return
     if (starts.size == 0) {
-        printf("Word not found!");
+        printf("Word not found!\n");
         return;
     }
 
