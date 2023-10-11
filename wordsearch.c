@@ -7,6 +7,7 @@
 typedef struct IntArray {
     int* arr;
     int size;
+    int capacity;
 } IntArray;
 
 // Declarations of the two functions you will implement
@@ -22,6 +23,8 @@ int calcCol(int flatIndex);
 char getCharFlat(char** puzzle, int flatIndex);
 char getChar(char** puzzle, int row, int col);
 IntArray searchAdjacent(char** puzzle, int flatIndex, char c);
+bool isWordAtIndex(char** puzzle, char* word, int flatIndex);
+IntArray getPath(char** puzzle, char* word, int flatIndex);
 
 // Main function, DO NOT MODIFY 	
 int main(int argc, char **argv) {
@@ -180,12 +183,14 @@ IntArray searchAdjacent(char** puzzle, int flatIndex, char c) {
     if (row < 0 || row >= bSize || col < 0 || col >= bSize) {
         return (IntArray) {
             .arr = (int*)malloc(0),
-            .size = 0
+            .size = 0,
+            .capacity = 0
         };
     }
     IntArray adj = {
         .arr = (int*)malloc(8 * sizeof(int)),
-        .size = 0
+        .size = 0,
+        .capacity = 8
     };
 
     // check the 8 adjacent squares for the char c
@@ -237,11 +242,96 @@ IntArray searchAdjacent(char** puzzle, int flatIndex, char c) {
     adj.arr = (int*)malloc(adj.size * sizeof(int));
     memcpy(adj.arr, old, adj.size * sizeof(int));
     free(old);
+    adj.capacity = adj.size;
 
     return adj;
 }
 
-bool isWordAtIndex(char** puzzle) {};
+/**
+ * @brief checks if the word is in the puzzle at the given flatIndex
+ * 
+ * @param puzzle 
+ * @param word 
+ * @param flatIndex 
+ * @return true 
+ * @return false 
+ */
+bool isWordAtIndex(char** puzzle, char* word, int flatIndex) {
+    // if the first letter of the word is not at the given flatIndex, return false
+    if (getCharFlat(puzzle, flatIndex) != *word) {
+        return false;
+    }
+    // if the word is only one letter long, return true
+    if (strlen(word) == 1) {
+        return true;
+    }
+    // otherwise, check the adjacent squares for the next letter of the word
+    IntArray adj = searchAdjacent(puzzle, flatIndex, *(word + 1));
+    // if there are no adjacent squares with the next letter, return false
+    if (adj.size == 0) {
+        return false;
+    }
+    // otherwise, check if the word is at any of the adjacent squares
+    for (int i = 0; i < adj.size; i++) {
+        if (isWordAtIndex(puzzle, word + 1, *(adj.arr + i))) {
+            return true;
+        }
+    }
+    // if the word is not at any of the adjacent squares, return false
+    return false;
+}
+
+/**
+ * @brief create a path of the word in the puzzle at the given flatIndex
+ * @precondition there exists a valid path of the word starting at the given flatIndex
+ * 
+ * @param puzzle 
+ * @param word 
+ * @param flatIndex 
+ * @return IntArray 
+ */
+IntArray getPath(char** puzzle, char* word, int flatIndex) {
+    // if the word is only one letter long, return the flatIndex
+    if (strlen(word) == 1) {
+        return (IntArray) {
+            .arr = (int*)malloc(sizeof(int)),
+            .size = 1,
+            .capacity = 1
+        };
+    }
+    // otherwise, check the adjacent squares for the next letter of the word
+    IntArray adj = searchAdjacent(puzzle, flatIndex, *(word + 1));
+    // if there are no adjacent squares with the next letter, return an empty array
+    if (adj.size == 0) {
+        return (IntArray) {
+            .arr = (int*)malloc(0),
+            .size = 0,
+            .capacity = 0
+        };
+    }
+    // otherwise, check if the word is at any of the adjacent squares
+    for (int i = 0; i < adj.size; i++) {
+        if (isWordAtIndex(puzzle, word + 1, *(adj.arr + i))) {
+            // if the word is at any of the adjacent squares, prepend the flatIndex to the path of the word at that square
+            // TODO: optimize this by not allocating a new array unless we need to
+            IntArray path = getPath(puzzle, word + 1, *(adj.arr + i));
+            int* old = path.arr;
+            path.arr = (int*)malloc((path.size + 1) * sizeof(int));
+            memcpy(path.arr + 1, old, path.size * sizeof(int));
+            free(old);
+            *(path.arr) = flatIndex;
+            path.size++;
+            path.capacity = path.size;
+            return path;
+        }
+    }
+    // if the word is not at any of the adjacent squares, return an empty array
+    return (IntArray) {
+        .arr = (int*)malloc(0),
+        .size = 0,
+        .capacity = 0
+    };
+}
 
 void searchPuzzle(char** puzzle, char* word) {
     // This function checks if arr contains the search word. If the 
@@ -253,15 +343,109 @@ void searchPuzzle(char** puzzle, char* word) {
     // first convert word to upper case for comparison
     char* upper = toUpper(word);
 
-    // then search for the first letter of the word in the puzzle
+    // we need to save the starts of valid paths, but we don't know how many there are...
+    // allocating an array of size bSize^2 seems wasteful,
+    // but passing through the puzzle twice seems inefficient
+    // compromise: count occurrences of the first letter of the word and allocate an array of that size, then resize later if needed
+    /// count occurrences of the first letter of the word
+    int countFirstLetter = 0;
+    for (int i = 0; i < bSize * bSize; i++) {
+        if (getCharFlat(puzzle, i) == *upper) {
+            countFirstLetter++;
+        }
+    }
+    /// search for valid paths
+    IntArray starts = {
+        .arr = (int*)malloc(countFirstLetter * sizeof(int)),
+        .size = 0,
+        .capacity = countFirstLetter
+    };
+    for (int i = 0; i < bSize * bSize; i++) {
+        if (getCharFlat(puzzle, i) == *upper) {
+            if (isWordAtIndex(puzzle, upper, i)) {
+                *(starts.arr + starts.size) = i;
+                starts.size++;
+            }
+        }
+    }
 
-    // for each occurence of the first letter, check if the word is in the puzzle at that point by recursively checking adjacent squares for the next letter
+    // if there are no valid paths, print a message and return
+    if (starts.size == 0) {
+        printf("Word not found!");
+        return;
+    }
 
-    // for each occurence of the first letter where the word is in the puzzle, call a function to create the path of the solution (maybe a linked list?)
+    // now, we need to figure out what the valid paths are ...
+    // for each valid start, get the path of the word
+    IntArray* paths = (IntArray*)malloc(starts.size * sizeof(IntArray));
+    int numPaths = 0;
+    for (int i = 0; i < starts.size; i++) {
+        IntArray path = getPath(puzzle, upper, *(starts.arr + i));
+        // if the path is empty, skip it
+        if (path.size == 0) {
+            printf("oops\n"); // this should never happen
+            continue;
+        }
+        // otherwise, add it to the list of paths
+        *(paths + numPaths) = path;
+        numPaths++;
+    }
 
-    // for extra credit, find every path, not just the first one
-    // issue: it's not clear how we output the paths if they overlap beyond the first letter.
+    // now, we need to render the paths in a grid, similar to how we rendered the puzzle
+    // we know that the bounds of the grid are the bounds of the puzzle
+    // we know that our paths don't start at the same square, but not that they don't overlap
+    // so, first we need to re-interpret our paths to a 3d array (size bSize x bSize x (up to numPaths)) of "indexes" (in the path, not in the puzzle)
+    // then, we can render the grid by iterating through the 3d array and printing
+    
+    // create our 3d array
+    IntArray** pathGrid = (IntArray**)malloc(bSize * sizeof(IntArray*));
+    // initialize each row and element of the grid with empty paths
+    for (int i = 0; i < bSize; i++) {
+        *(pathGrid + i) = (IntArray*)malloc(bSize * sizeof(IntArray));
+        for (int j = 0; j < bSize; j++) {
+            *(*(pathGrid + i) + j) = (IntArray) {
+                .arr = (int*)malloc(0), // so we don't need to deal with actual null pointers
+                .size = 0,
+                .capacity = 0,
+            };
+        }
+    }
+    // for each path, add it to the grid
+    for (int i = 0; i < numPaths; i++) {
+        IntArray path = *(paths + i);
+        for (int j = 0; j < path.size; j++) {
+            int flatIndex = *(path.arr + j);
+            int row = calcRow(flatIndex), col = calcCol(flatIndex);
+            // resize the pathGrid[i][j] if needed, then add j+1 to it
+            IntArray* temp = *(pathGrid + row) + col;
+            if (temp->size == temp->capacity) {
+                // if we are resizing from 0, we need increment capacity first
+                if (temp->capacity == 0) temp->capacity++;
+                temp->capacity *= 2;
+                temp->arr = (int*)realloc(temp->arr, temp->capacity * sizeof(int));
+            }
+            // add j+1 to the pathGrid[i][j]
+            *(temp->arr + temp->size) = j + 1;
+            temp->size++;
+        }
+    }
 
-    // print out the paths of valid solutions (probably with a 2 or 3d array?)
-
+    // now, we can render the grid
+    for (int i = 0; i < bSize; i++) {
+        for (int j = 0; j < bSize; j++) {
+            IntArray* temp = *(pathGrid + i) + j;
+            // if the array at this index is empty, print 0
+            if (temp->size == 0) {
+                printf("0\t");
+            }
+            // otherwise, dump the array
+            else {
+                for (int k = 0; k < temp->size; k++) {
+                    printf("%d", *(temp->arr + k));
+                }
+                printf("\t");
+            }
+        }
+        printf("\n");
+    }
 }
