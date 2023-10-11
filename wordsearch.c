@@ -3,7 +3,7 @@
 #include <string.h>
 #include <stdbool.h>
 
-typedef struct {
+typedef struct IntArray {
     int* arr;
     int size;
 } IntArray;
@@ -15,8 +15,11 @@ void searchPuzzle(char** arr, char* word);
 int bSize;
 char asUpper(char c);
 char* toUpper(char* str);
-int flatIndex(int row, int col);
-char getChar(char** arr, int flatIndex);
+int calcFlatIndex(int rowIndex, int colIndex);
+int calcRow(int flatIndex);
+int calcCol(int flatIndex);
+char getCharFlat(char** arr, int flatIndex);
+char getChar(char** arr, int row, int col);
 IntArray searchAdjacent(char** arr, int flatIndex, char c);
 
 // Main function, DO NOT MODIFY 	
@@ -114,9 +117,30 @@ char* toUpper(char* str) {
  * @param col 
  * @return int 
  */
-int flatIndex(int row, int col) {
+int calcFlatIndex(int row, int col) {
     return row * bSize + col;
 }
+
+/**
+ * @brief calculate the row corresponding to the given flatIndex of a 2D array of size bSize
+ * 
+ * @param flatIndex 
+ * @return int 
+ */
+int calcRow(int flatIndex) {
+    return flatIndex / bSize;
+}
+
+/**
+ * @brief calculate the col corresponding to the given flatIndex of a 2D array of size bSize
+ * 
+ * @param flatIndex 
+ * @return int 
+ */
+int calcCol(int flatIndex) {
+    return flatIndex % bSize;
+}
+
 /**
  * @brief get the char at the flat index of the 2D array
  * 
@@ -124,9 +148,18 @@ int flatIndex(int row, int col) {
  * @param flatIndex 
  * @return char 
  */
-char getChar(char** arr, int flatIndex) {
-    int row = flatIndex / bSize;
-    int col = flatIndex % bSize;
+char getCharFlat(char** arr, int flatIndex) {
+    return getChar(arr, calcRow(flatIndex), calcCol(flatIndex));
+}
+/**
+ * @brief Get the char at the given row and col of the 2D array
+ * 
+ * @param arr 
+ * @param row 
+ * @param col 
+ * @return char 
+ */
+char getChar(char** arr, int row, int col) {
     return *(*(arr + row) + col);
 }
 /**
@@ -139,7 +172,72 @@ char getChar(char** arr, int flatIndex) {
  * @return IntArray  
  */
 IntArray searchAdjacent(char** arr, int flatIndex, char c) {
-    // TODO: 
+    // strategy regarding this IntArray, start with it being size 8, because that's the upper bound
+    // track how many elements we actually use, and then resize it to that size at the end before returning it   
+    int row = calcRow(flatIndex), col = calcCol(flatIndex);
+    // if the starting square is out of bounds, return an empty array
+    if (row < 0 || row >= bSize || col < 0 || col >= bSize) {
+        return (IntArray) {
+            .arr = (int*)malloc(0),
+            .size = 0
+        };
+    }
+    IntArray adj = {
+        .arr = (int*)malloc(8 * sizeof(int)),
+        .size = 0
+    };
+
+    // check the 8 adjacent squares for the char c
+    // if the adjacent square is out of bounds, skip it
+
+    // top left
+    if (row - 1 >= 0 && col - 1 >= 0 && getChar(arr, row - 1, col - 1) == c) {
+        *(adj.arr + adj.size) = calcFlatIndex(row - 1, col - 1);
+        adj.size++;
+    }
+    // top
+    if (row - 1 >= 0 && getChar(arr, row - 1, col) == c) {
+        *(adj.arr + adj.size) = calcFlatIndex(row - 1, col);
+        adj.size++;
+    }
+    // top right
+    if (row - 1 >= 0 && col + 1 < bSize && getChar(arr, row - 1, col + 1) == c) {
+        *(adj.arr + adj.size) = calcFlatIndex(row - 1, col + 1);
+        adj.size++;
+    }
+    // left
+    if (col - 1 >= 0 && getChar(arr, row, col - 1) == c) {
+        *(adj.arr + adj.size) = calcFlatIndex(row, col - 1);
+        adj.size++;
+    }
+    // right
+    if (col + 1 < bSize && getChar(arr, row, col + 1) == c) {
+        *(adj.arr + adj.size) = calcFlatIndex(row, col + 1);
+        adj.size++;
+    }
+    // bottom left
+    if (row + 1 < bSize && col - 1 >= 0 && getChar(arr, row + 1, col - 1) == c) {
+        *(adj.arr + adj.size) = calcFlatIndex(row + 1, col - 1);
+        adj.size++;
+    }
+    // bottom
+    if (row + 1 < bSize && getChar(arr, row + 1, col) == c) {
+        *(adj.arr + adj.size) = calcFlatIndex(row + 1, col);
+        adj.size++;
+    }
+    // bottom right
+    if (row + 1 < bSize && col + 1 < bSize && getChar(arr, row + 1, col + 1) == c) {
+        *(adj.arr + adj.size) = calcFlatIndex(row + 1, col + 1);
+        adj.size++;
+    }
+
+    // resize the array to the number of elements we actually used
+    int* old = adj.arr;
+    adj.arr = (int*)malloc(adj.size * sizeof(int));
+    memcpy(adj.arr, old, adj.size * sizeof(int));
+    free(old);
+
+    return adj;
 }
 
 
