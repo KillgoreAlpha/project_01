@@ -270,18 +270,18 @@ bool isWordAtIndex(char** puzzle, char* word, int flatIndex) {
     IntArray adj = searchAdjacent(puzzle, flatIndex, *(word + 1));
     // if there are no adjacent squares with the next letter, return false
     if (adj.size == 0) {
-        // free
+        free (adj.arr);
         return false;
     }
     // otherwise, check if the word is at any of the adjacent squares
     for (int i = 0; i < adj.size; i++) {
         if (isWordAtIndex(puzzle, word + 1, *(adj.arr + i))) {
-            // free
+            free (adj.arr);
             return true;
         }
     }
     // if the word is not at any of the adjacent squares, return false
-    // free 
+    free (adj.arr);
     return false;
 }
 
@@ -309,7 +309,7 @@ IntArray getPath(char** puzzle, char* word, int flatIndex) {
     IntArray adj = searchAdjacent(puzzle, flatIndex, *(word + 1));
     // if there are no adjacent squares with the next letter, return an empty array
     if (adj.size == 0) {
-        // free adj
+        free (adj.arr);
         return (IntArray) {
             .arr = (int*)malloc(0),
             .size = 0,
@@ -329,11 +329,11 @@ IntArray getPath(char** puzzle, char* word, int flatIndex) {
             *(path.arr) = flatIndex;
             path.size++;
             path.capacity = path.size;
-            // free adj
+            free (adj.arr);
             return path;
         }
     }
-    // free adj
+    free (adj.arr);
     // if the word is not at any of the adjacent squares, return an empty array
     return (IntArray) {
         .arr = (int*)malloc(0),
